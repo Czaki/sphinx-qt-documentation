@@ -1,0 +1,29 @@
+
+
+jobs:
+- template: /.ci/azure-job-template.yml
+  parameters:
+    python_version: $(python_version)
+    job_name: 'PyQt5'
+    package_install: 'PyQt5'
+- template: /.ci/azure-job-template.yml
+  parameters:
+    python_version: $(python_version)
+    job_name: 'PySide2'
+    package_install: 'PySide2'
+- template: /.ci/azure-job-template.yml
+  parameters:
+    python_version: $(python_version)
+    job_name: 'qtpy__PySide2'
+    package_install: 'qtpy PySide2'
+- template: /.ci/azure-job-template.yml
+  parameters:
+    python_version: $(python_version)
+    job_name: 'Qt_dot_py__PyQt5'
+    package_install: 'Qt.py PyQt5'
+- template: /.ci/azure-job-template.yml
+  parameters:
+    python_version: $(python_version)
+    job_name: 'no_install'
+    # like none
+    package_install: 'pip'

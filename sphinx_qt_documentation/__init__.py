@@ -21,14 +21,26 @@ from docutils import nodes
 from typing import List, Optional, Dict, Any
 from sphinx.locale import get_translation
 from sphinx.ext.intersphinx import InventoryAdapter
-from qtpy.QtCore import Signal
 
 _ = get_translation("sphinx")
 
-try:
-    from qtpy import QT_VERSION
-except ImportError:
-    QT_VERSION = None
+
+def _get_signal_and_version():
+    name_mapping = { 'qtpy': (lambda: 'QT_VERSION', 'Signal'),
+                     'Qt': (lambda: '__qt_version__', 'Signal'),
+                     'PySide2': (lambda: importlib.import_module('PySide2.QtCore').__version__, 'Signal'),
+                     'PyQt5': (lambda: importlib.import_module('PyQt5.QtCore').QT_VERSION_STR, 'pyqtSignal')}
+    for module_name, (version, signal_name) in name_mapping.items():
+        try:
+            core = importlib.import_module(f'{module_name}.QtCore')
+            signal = getattr(core, signal_name)
+            return signal, version()
+        except (ModuleNotFoundError, ImportError):
+            continue
+    raise RuntimeError('No Qt bindings found')
+
+
+Signal, QT_VERSION = _get_signal_and_version()
 
 # TODO add response to
 #  https://stackoverflow.com/questions/47102004/how-to-properly-link-to-pyqt5-documentation-using-intersphinx
