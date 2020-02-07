@@ -22,5 +22,4 @@ jobs:
       submodules: true
     - script: |
         pip install ${{ parameters.package_install }}
-        pip install .
-        ~/.local/bin/sphinx-build -W tests/document01 /tmp/build
+        ./.ci/run_tests.bash ${{ parameters.job_name }}
