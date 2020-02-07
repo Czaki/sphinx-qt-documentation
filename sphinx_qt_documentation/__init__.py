@@ -26,18 +26,18 @@ _ = get_translation("sphinx")
 
 
 def _get_signal_and_version():
-    version_mapping = {'qtpy': lambda: 'QT_VERSION', 'Qt': lambda: '__qt_version__',
-                       'Pyside2': lambda: importlib.import_module('PySide2.QtCore').__version__,
-                       'PyQt5': lambda: importlib.import_module('PyQt5.QtCore').QT_VERSION_STR}
-    for module_name in version_mapping.keys():
+    name_mapping = { 'qtpy': (lambda: 'QT_VERSION', 'Signal'),
+                     'Qt': (lambda: '__qt_version__', 'Signal'),
+                     'Pyside2': (lambda: importlib.import_module('PySide2.QtCore').__version__, 'Signal'),
+                     'PyQt5': (lambda: importlib.import_module('PyQt5.QtCore').QT_VERSION_STR, 'pyqtSignal')}
+    for module_name, (version, signal_name) in name_mapping.items():
         try:
             core = importlib.import_module(f'{module_name}.QtCore')
-            signal = getattr(core, 'Signal')
-            return signal, version_mapping[module_name]()
+            signal = getattr(core, signal_name)
+            return signal, version()
         except (ModuleNotFoundError, ImportError):
             continue
-    # might be better to mock a SSignal class here
-    return None, None
+    raise RuntimeError('No Qt bindings found')
 
 
 Signal, QT_VERSION = _get_signal_and_version()
