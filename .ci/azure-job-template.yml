@@ -21,5 +21,6 @@ jobs:
     - checkout: self
       submodules: true
     - script: |
+        pip install -U setuptools
         pip install ${{ parameters.package_install }}
         ./.ci/run_tests.bash ${{ parameters.job_name }}
