@@ -1,0 +1,26 @@
+parameters:
+  package_install: 'NONE'
+  job_name: ''
+
+jobs:
+- job: ${{ parameters.job_name }}
+  strategy:
+    matrix:
+      Python36:
+        container_image: python:3.6
+      Python37:
+        container_image: python:3.7
+      Python38:
+        container_image: python:3.8
+    maxParallel: 8
+  timeoutInMinutes: 0
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: $[ variables['container_image'] ]
+  steps:
+    - checkout: self
+      submodules: true
+    - script: |
+        pip install ${{ parameters.package_install }}
+        pip install .
+        ~/.local/bin/sphinx-build -W tests/document01 /tmp/build
