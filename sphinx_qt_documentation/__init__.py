@@ -28,7 +28,7 @@ _ = get_translation("sphinx")
 def _get_signal_and_version():
     name_mapping = { 'qtpy': (lambda: 'QT_VERSION', 'Signal'),
                      'Qt': (lambda: '__qt_version__', 'Signal'),
-                     'Pyside2': (lambda: importlib.import_module('PySide2.QtCore').__version__, 'Signal'),
+                     'PySide2': (lambda: importlib.import_module('PySide2.QtCore').__version__, 'Signal'),
                      'PyQt5': (lambda: importlib.import_module('PyQt5.QtCore').QT_VERSION_STR, 'pyqtSignal')}
     for module_name, (version, signal_name) in name_mapping.items():
         try:
