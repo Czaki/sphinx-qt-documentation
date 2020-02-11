@@ -8,7 +8,7 @@ This extension provides one configuration option:
 
 `qt_documentation` with possible values:
 
-* PyQt5 - linking to PyQt documentation on https://www.riverbankcomputing.com/static/Docs/PyQt5/api/ (incomplete)
+* PyQt5 - linking to PyQt documentation on https://www.riverbankcomputing.com/static/Docs/PyQt5/ (incomplete)
 * Qt5 - linking to Qt5 documentation on "https://doc.qt.io/qt-5/" (default)
 * PySide2 - linking to PySide2 documentation on  "https://doc.qt.io/qtforpython/PySide2/"
 
