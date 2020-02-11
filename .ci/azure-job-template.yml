@@ -7,11 +7,11 @@ jobs:
   strategy:
     matrix:
       Python36:
-        container_image: python:3.6
+        container_image: docker.pkg.github.com/renefritze/sphinx-qt-documentation-ci/sphinx-qt-documentation-ci_py36
       Python37:
-        container_image: python:3.7
+        container_image: docker.pkg.github.com/renefritze/sphinx-qt-documentation-ci/sphinx-qt-documentation-ci_py37
       Python38:
-        container_image: python:3.8
+        container_image: docker.pkg.github.com/renefritze/sphinx-qt-documentation-ci/sphinx-qt-documentation-ci_py38
     maxParallel: 8
   timeoutInMinutes: 0
   pool:
