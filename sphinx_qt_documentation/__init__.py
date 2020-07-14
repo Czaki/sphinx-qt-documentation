@@ -56,7 +56,7 @@ signal_name = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
 slot_name = {"Qt5": "Slot", "PySide2": "Slot", "PyQt5": "pyqtSlot"}
 
 type_translate_dict = {
-    "class": ["class"],
+    "class": ["class", "enum"],
     "meth": ["method", "signal"],
     "mod": ["module"],
 }
@@ -121,6 +121,8 @@ def missing_reference(
                         obj_type_name
                     ][target_name]
                     uri = uri.replace("##", "#")
+                    if name == 'enum':
+                        uri += "-enum"
                     #  print(node)  # print nodes with unresolved references
                     break
             else:
