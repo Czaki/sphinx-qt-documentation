@@ -121,8 +121,6 @@ def missing_reference(
                         obj_type_name
                     ][target_name]
                     uri = uri.replace("##", "#")
-                    if name == 'enum':
-                        uri += "-enum"
                     #  print(node)  # print nodes with unresolved references
                     break
             else:
@@ -133,6 +131,8 @@ def missing_reference(
         if app.config.qt_documentation == "Qt5":
             html_name = uri.split("/")[-1]
             uri = "https://doc.qt.io/qt-5/" + html_name
+            if name == 'enum':
+                uri += "-enum"
         elif app.config.qt_documentation == "PySide2":
             if node.get("reftype") == "meth":
                 split_tup = target_name.split(".")[1:]
