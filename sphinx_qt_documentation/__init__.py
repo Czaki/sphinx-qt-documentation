@@ -56,7 +56,7 @@ signal_name = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
 slot_name = {"Qt5": "Slot", "PySide2": "Slot", "PyQt5": "pyqtSlot"}
 
 type_translate_dict = {
-    "class": ["class"],
+    "class": ["class", "enum"],
     "meth": ["method", "signal"],
     "mod": ["module"],
 }
@@ -131,6 +131,8 @@ def missing_reference(
         if app.config.qt_documentation == "Qt5":
             html_name = uri.split("/")[-1]
             uri = "https://doc.qt.io/qt-5/" + html_name
+            if name == 'enum':
+                uri += "-enum"
         elif app.config.qt_documentation == "PySide2":
             if node.get("reftype") == "meth":
                 split_tup = target_name.split(".")[1:]
