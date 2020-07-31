@@ -12,32 +12,40 @@ this extension provides one configuration option:
 import importlib
 import inspect
 import re
+from typing import Any, Dict, List, Optional
 
+from docutils import nodes
+from docutils.nodes import Element, TextElement
 from sphinx.application import Sphinx
 from sphinx.config import ENUM
 from sphinx.environment import BuildEnvironment
-from docutils.nodes import Element, TextElement
-from docutils import nodes
-from typing import List, Optional, Dict, Any
-from sphinx.locale import get_translation
 from sphinx.ext.intersphinx import InventoryAdapter
+from sphinx.locale import get_translation
 
 _ = get_translation("sphinx")
 
 
 def _get_signal_and_version():
-    name_mapping = { 'qtpy': (lambda: 'QT_VERSION', 'Signal'),
-                     'Qt': (lambda: '__qt_version__', 'Signal'),
-                     'PySide2': (lambda: importlib.import_module('PySide2.QtCore').__version__, 'Signal'),
-                     'PyQt5': (lambda: importlib.import_module('PyQt5.QtCore').QT_VERSION_STR, 'pyqtSignal')}
+    name_mapping = {
+        "qtpy": (lambda: "QT_VERSION", "Signal"),
+        "Qt": (lambda: "__qt_version__", "Signal"),
+        "PySide2": (
+            lambda: importlib.import_module("PySide2.QtCore").__version__,
+            "Signal",
+        ),
+        "PyQt5": (
+            lambda: importlib.import_module("PyQt5.QtCore").QT_VERSION_STR,
+            "pyqtSignal",
+        ),
+    }
     for module_name, (version, signal_name) in name_mapping.items():
         try:
-            core = importlib.import_module(f'{module_name}.QtCore')
+            core = importlib.import_module(f"{module_name}.QtCore")
             signal = getattr(core, signal_name)
             return signal, version()
         except (ModuleNotFoundError, ImportError):
             continue
-    raise RuntimeError('No Qt bindings found')
+    raise RuntimeError("No Qt bindings found")
 
 
 Signal, QT_VERSION = _get_signal_and_version()
@@ -131,7 +139,7 @@ def missing_reference(
         if app.config.qt_documentation == "Qt5":
             html_name = uri.split("/")[-1]
             uri = "https://doc.qt.io/qt-5/" + html_name
-            if name == 'enum':
+            if name == "enum":
                 uri += "-enum"
         elif app.config.qt_documentation == "PySide2":
             if node.get("reftype") == "meth":
@@ -178,6 +186,7 @@ def autodoc_process_signature(
 
 
 def setup(app: Sphinx) -> Dict[str, Any]:
+    app.setup_extension("sphinx.ext.autodoc")
     app.setup_extension("sphinx.ext.intersphinx")
     if hasattr(app.config, "intersphinx_mapping"):
         if "PyQt5" not in app.config.intersphinx_mapping:
@@ -192,7 +201,9 @@ def setup(app: Sphinx) -> Dict[str, Any]:
     app.connect("missing-reference", missing_reference)
     app.connect("autodoc-process-signature", autodoc_process_signature)
     # app.connect('doctree-read', doctree_read)
-    app.add_config_value("qt_documentation", "Qt5", True, ENUM("Qt5", "PySide2", "PyQt5"))
+    app.add_config_value(
+        "qt_documentation", "Qt5", True, ENUM("Qt5", "PySide2", "PyQt5")
+    )
     return {"version": "0.1", "env_version": 1, "parallel_read_safe": True}
 
 
