@@ -56,7 +56,7 @@ signal_name = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
 slot_name = {"Qt5": "Slot", "PySide2": "Slot", "PyQt5": "pyqtSlot"}
 
 type_translate_dict = {
-    "class": ["class", "enum"],
+    "class": ["class", "enum", "attribute"],
     "meth": ["method", "signal"],
     "mod": ["module"],
 }
@@ -90,9 +90,6 @@ def missing_reference(
         if not objtypes:
             return None
         objtypes = ["%s:%s" % (domain, objtype) for objtype in objtypes]
-    if target.startswith("PySide2"):
-        head, tail = target.split(".", 1)
-        target = "PyQt5." + tail
     if signal_pattern.match(target):
         uri = signal_slot_uri[app.config.qt_documentation]
         dispname = signal_name[app.config.qt_documentation]
@@ -102,24 +99,28 @@ def missing_reference(
         dispname = slot_name[app.config.qt_documentation]
         version = QT_VERSION
     else:
-        target_list = [target, "PyQt5." + target]
-        target_list += [
-            name + "." + target
-            for name in inventories.named_inventory["PyQt5"]["sip:module"].keys()
-        ]
+        target_list = [target, *['.'.join([prefix, target]) for prefix in ["PyQt5", "PySide2"]]]
+        target_list += ['.'.join([*target.split('.')[:2], target]) for target in target_list]
+        target_list += [target[:-1] for target in target_list if target[-1] == 's']
         if node.get("reftype") in type_translate_dict:
             type_names = type_translate_dict[node.get("reftype")]
         else:
             type_names = [node.get("reftype")]
         for name in type_names:
-            obj_type_name = "sip:{}".format(name)
-            if obj_type_name not in inventories.named_inventory["PyQt5"]:
-                return None
+            for preprefix in ["sip", "py"]:
+                obj_type_name = "{}:{}".format(preprefix, name)
+                if obj_type_name in inventories.named_inventory["Qt"]:
+                    break
+            else:
+                continue
             for target_name in target_list:
                 if target_name in inventories.main_inventory[obj_type_name]:
-                    proj, version, uri, dispname = inventories.named_inventory["PyQt5"][
-                        obj_type_name
-                    ][target_name]
+                    d = inventories.named_inventory["Qt"][obj_type_name]
+                    if target_name not in d:
+                        continue
+                    proj, version, uri, dispname = d[target_name]
+                    if dispname in ['', '-']:
+                        dispname = target
                     uri = uri.replace("##", "#")
                     #  print(node)  # print nodes with unresolved references
                     break
@@ -133,14 +134,6 @@ def missing_reference(
             uri = "https://doc.qt.io/qt-5/" + html_name
             if name == 'enum':
                 uri += "-enum"
-        elif app.config.qt_documentation == "PySide2":
-            if node.get("reftype") == "meth":
-                split_tup = target_name.split(".")[1:]
-                ref_name = ".".join(["PySide2", split_tup[0], "PySide2"] + split_tup)
-                html_name = "/".join(split_tup[:-1]) + ".html#" + ref_name
-            else:
-                html_name = "/".join(target_name.split(".")[1:]) + ".html"
-            uri = "https://doc.qt.io/qtforpython/PySide2/" + html_name
 
     # remove this line if you would like straight to pyqt documentation
     if version:
@@ -148,6 +141,9 @@ def missing_reference(
     else:
         reftitle = _("(in %s)") % (app.config.qt_documentation,)
     newnode = nodes.reference("", "", internal=False, refuri=uri, reftitle=reftitle)
+    dispname_start, sep, rest = dispname.partition('.')
+    if dispname_start in ["PyQt5", "PySide2"]:
+        dispname = rest
     if node.get("refexplicit"):
         # use whatever title was given
         newnode.append(contnode)
