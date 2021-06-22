@@ -91,8 +91,8 @@ def missing_reference(
             return None
         objtypes = ["%s:%s" % (domain, objtype) for objtype in objtypes]
     if target.startswith("PySide2"):
-        head, tail = target.split(".", 1)
-        target = "PyQt5." + tail
+        head, dot, tail = target.partition(".")
+        target = "PyQt5" + dot + tail
     if signal_pattern.match(target):
         uri = signal_slot_uri[app.config.qt_documentation]
         dispname = signal_name[app.config.qt_documentation]
