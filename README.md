@@ -1,5 +1,11 @@
 # Sphinx Qt documentation
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Czaki/sphinx-qt-documentation/master.svg)](https://results.pre-commit.ci/latest/github/Czaki/sphinx-qt-documentation/master)
+[![Tests](https://github.com/Czaki/sphinx-qt-documentation/actions/workflows/test.yaml/badge.svg)](https://github.com/Czaki/sphinx-qt-documentation/actions/workflows/test.yaml)
+[![PyPI version](https://badge.fury.io/py/sphinx-qt-documentation.svg)](https://badge.fury.io/py/sphinx-qt-documentation)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+
 This is plugin to add cross link to qt documentation for python code created with PyQt5 or PySide2.
 
 Currently it support `qtpy`, `Qt.py` wrappers and `PyQt5` and `PySide2`.
