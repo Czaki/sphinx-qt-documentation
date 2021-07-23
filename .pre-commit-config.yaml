@@ -11,13 +11,13 @@ repos:
       pass_filenames: true
       # this seems to need to be here in addition to setup.cfg
       exclude: vendored|__init__.py|examples
--   repo: https://github.com/pre-commit/mirrors-pylint
-    rev: 'v3.0.0a4'  # Use the sha / tag you want to point at
-    hooks:
-    - id: pylint
-      exclude: notebooks|setup.py
-      args:
-        -  --disable=E0401,C0116,R0903
+#-   repo: https://github.com/pre-commit/mirrors-pylint
+#    rev: 'v3.0.0a4'  # Use the sha / tag you want to point at
+#    hooks:
+#    - id: pylint
+#      exclude: notebooks|setup.py
+#      args:
+#        -  --disable=E0401,C0116,R0903
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
