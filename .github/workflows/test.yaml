@@ -12,22 +12,18 @@ on:
 jobs:
   test:
     name: Run Test
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: ['3.6', '3.7', '3.8', '3.9']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
-        name: Install Python 3.6
+        name: Install Python ${{ matrix.python_version }}
         with:
-          python-version: '3.6'
-      - uses: actions/setup-python@v1
-        name: Install Python 3.6
-        with:
-          python-version: '3.7'
-      - uses: actions/setup-python@v1
-        name: Install Python 3.6
-        with:
-          python-version: '3.8'
+          python-version: ${{ matrix.python_version }}
       - name: Install dependencies
-        run: python -m pip install tox
+        run: python -m pip install tox tox-gh-actions
       - name: RunTest
         run: python -m tox

@@ -59,7 +59,7 @@ signal_slot_uri = {
     "PyQt5": "https://www.riverbankcomputing.com/static/Docs/PyQt5/signals_slots.html",
 }
 
-signal_name = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
+signal_name_dict = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
 
 slot_name = {"Qt5": "Slot", "PySide2": "Slot", "PyQt5": "pyqtSlot"}
 
@@ -103,7 +103,7 @@ def missing_reference(
         target = "PyQt5" + dot + tail
     if signal_pattern.match(target):
         uri = signal_slot_uri[app.config.qt_documentation]
-        dispname = signal_name[app.config.qt_documentation]
+        dispname = signal_name_dict[app.config.qt_documentation]
         version = QT_VERSION
     elif slot_pattern.match(target):
         uri = signal_slot_uri[app.config.qt_documentation]
