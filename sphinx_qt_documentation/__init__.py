@@ -84,7 +84,7 @@ def missing_reference(
     if node["reftype"] == "any":
         # we search anything!
         objtypes = [
-            "%s:%s" % (domain.name, objtype)
+            f"{domain.name}:{objtype}"
             for domain in env.domains.values()
             for objtype in domain.object_types
         ]
@@ -97,7 +97,7 @@ def missing_reference(
         objtypes = env.get_domain(domain).objtypes_for_role(node["reftype"])
         if not objtypes:
             return None
-        objtypes = ["%s:%s" % (domain, objtype) for objtype in objtypes]
+        objtypes = [f"{domain}:{objtype}" for objtype in objtypes]
     if target.startswith("PySide2"):
         head, dot, tail = target.partition(".")
         target = "PyQt5" + dot + tail
@@ -120,7 +120,7 @@ def missing_reference(
         else:
             type_names = [node.get("reftype")]
         for name in type_names:
-            obj_type_name = "sip:{}".format(name)
+            obj_type_name = f"sip:{name}"
             if obj_type_name not in inventories.named_inventory["PyQt5"]:
                 return None
             for target_name in target_list:
