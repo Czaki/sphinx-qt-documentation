@@ -83,6 +83,8 @@ def _get_inventory_for_target(target: str, inventories: InventoryAdapter):
         pass
     if "Qt" in inventories.named_inventory:
         return inventories.named_inventory["Qt"]
+    if "Qt5" in inventories.named_inventory:
+        return inventories.named_inventory["Qt5"]
     if "PyQt5" in inventories.named_inventory:
         return inventories.named_inventory["PyQt5"]
     return inventories.named_inventory["PySide2"]
@@ -94,6 +96,9 @@ def _extract_from_inventory(target: str, inventory, node: Element):
         target_list += [name + "." + target for name in inventory["sip:module"].keys()]
     if "py:module" in inventory:
         target_list += [name + "." + target for name in inventory["py:module"].keys()]
+        target_list += [
+            name + "." + name + "." + target for name in inventory["py:module"].keys()
+        ]
     type_names = type_translate_dict.get(node.get("reftype"), [node.get("reftype")])
     for name in type_names:
         for prefix in ["sip", "py"]:
@@ -104,10 +109,27 @@ def _extract_from_inventory(target: str, inventory, node: Element):
             continue
         for target_name in target_list:
             if target_name in inventory[obj_type_name]:
-                _proj, version, uri, dispname = inventory[obj_type_name][target_name]
+                _proj, version, uri, _dispname = inventory[obj_type_name][target_name]
                 uri = uri.replace("##", "#")
-                return uri, dispname, version, target_name, name
+                return uri, target, version, target_name, name
     return None
+
+
+def _parse_pyside_uri(uri: str) -> Tuple[str, str]:
+    """
+    Try to parse PySide URI and extract html file name and anchor
+    """
+    uri_re = re.compile(
+        r"https://doc.qt.io/qtforpython(-5)?/(?P<path>(PySide[26])(/\w+)+)\.html#(?P<anchor>(\w+\.)+(\w+))"
+    )
+    matched = uri_re.match(uri)
+    if matched is None:
+        raise ValueError(f"Cannot parse '{uri}' uri")
+    path = matched.group("path")
+    uri_anchor = matched.group("anchor")
+    class_string = path.split("/")[-1]
+    anchor = "" if uri_anchor.endswith(class_string) else uri_anchor.split(".")[-1]
+    return class_string.lower() + ".html", anchor
 
 
 def _prepare_object(
@@ -119,13 +141,20 @@ def _prepare_object(
     if res is None:
         return None
 
-    version, uri, display_name, target_name, name = res
+    uri, display_name, version, target_name, name = res
     if app.config.qt_documentation == "Qt5":
-        html_name = uri.split("/")[-1]
-        uri = "https://doc.qt.io/qt-5/" + html_name
-        if name == "enum":
-            uri += "-enum"
-    elif app.config.qt_documentation == "PySide2":
+        if "riverbankcomputing" in uri:
+            html_name = uri.split("/")[-1]
+            uri = "https://doc.qt.io/qt-5/" + html_name
+            if name == "enum":
+                uri += "-enum"
+        else:
+            # PySide2 documentation
+            html_name, anchor = _parse_pyside_uri(uri)
+            uri = (
+                "https://doc.qt.io/qt-5/" + html_name + ("#" + anchor if anchor else "")
+            )
+    elif app.config.qt_documentation == "PySide2" and "PySide2" not in uri:
         if node.get("reftype") == "meth":
             split_tup = target_name.split(".")[1:]
             ref_name = ".".join(["PySide2", split_tup[0], "PySide2"] + split_tup)
@@ -154,20 +183,15 @@ def missing_reference(
             return None
         if not env.get_domain(domain).objtypes_for_role(node["reftype"]):
             return None
-    target = _fix_target(target, inventories)
-    if signal_pattern.match(target):
+    new_target = _fix_target(target, inventories)
+    if signal_pattern.match(new_target) or slot_pattern.match(new_target):
         uri = signal_slot_uri[app.config.qt_documentation]
-        display_name = signal_name_dict[app.config.qt_documentation]
-        version = QT_VERSION
-    elif slot_pattern.match(target):
-        uri = signal_slot_uri[app.config.qt_documentation]
-        display_name = slot_name[app.config.qt_documentation]
         version = QT_VERSION
     else:
-        resp = _prepare_object(target, inventories, node, app)
+        resp = _prepare_object(new_target, inventories, node, app)
         if resp is None:
             return None
-        uri, display_name, version = resp
+        uri, _display_name, version = resp
     # remove this line if you would like straight to pyqt documentation
     if version:
         reftitle = _("(in %s v%s)") % (app.config.qt_documentation, version)
@@ -179,7 +203,7 @@ def missing_reference(
         newnode.append(contnode)
     else:
         # else use the given display name (used for :ref:)
-        newnode.append(contnode.__class__(display_name, display_name))
+        newnode.append(contnode.__class__(target, target))
     return newnode
 
 

@@ -6,9 +6,9 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
-This is plugin to add cross link to qt documentation for python code created with PyQt5 or PySide2.
+This is plugin to add cross-link to qt documentation for python code created with PyQt5 or PySide2.
 
-Currently it support `qtpy`, `Qt.py` wrappers and `PyQt5` and `PySide2`.
+Currently, it supports `qtpy`, `Qt.py` wrappers and `PyQt5` and `PySide2`.
 
 This extension provides one configuration option:
 
@@ -26,3 +26,5 @@ intersphinx_mapping = {...
                        "PyQt5": (custom_url, None),
                        ...}
 ```
+
+This package currently does not support linking PyQt5 documentation using PySide2 `.inv` file

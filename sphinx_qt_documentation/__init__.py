@@ -35,7 +35,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
         name = "PyQt5"
 
     if hasattr(app.config, "intersphinx_mapping"):
-        if "PyQt5" not in app.config.intersphinx_mapping:
+        if name not in app.config.intersphinx_mapping:
             app.config.intersphinx_mapping[name] = (url, None)
     else:
         app.config.intersphinx_mapping = {name: (url, None)}
