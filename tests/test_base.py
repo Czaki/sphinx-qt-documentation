@@ -1,3 +1,4 @@
+# pylint: disable=C0114
 # import subprocess
 from pathlib import Path
 from typing import List
@@ -8,12 +9,12 @@ from sphinx.cmd.build import build_main
 
 def create_conf(dir_path: Path, extensions: List[str], additional: str = ""):
     with open(dir_path / "conf.py", "w") as f_p:
-        f_p.write(conf_tenplate.format(extensions, additional))
+        f_p.write(CONF_TEMPLATE.format(extensions, additional))
 
 
 def create_index(dir_path: Path):
     with open(dir_path / "index.rst", "w") as f_p:
-        f_p.write(index_template)
+        f_p.write(INDEX_TEMPLATE)
 
 
 def test_simple(tmp_path):
@@ -48,7 +49,7 @@ def test_target_documentation(tmp_path, target, url):
     assert url in text
 
 
-conf_tenplate = """
+CONF_TEMPLATE = """
 project = 'sphinx-qt-documentation-test01'
 extensions = {}
 master_doc = "index"
@@ -56,7 +57,7 @@ master_doc = "index"
 {}
 """
 
-index_template = """
+INDEX_TEMPLATE = """
 Welcome to sphinx-qt-documentation-test01's documentation!
 ==========================================================
 

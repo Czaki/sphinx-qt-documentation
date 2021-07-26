@@ -1,7 +1,11 @@
+"""
+implementation of sphinx missing_reference hook
+"""
+
 import importlib
 import inspect
 import re
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from docutils import nodes
 from docutils.nodes import Element, TextElement
@@ -30,7 +34,7 @@ def _get_signal_and_version():
         try:
             core = importlib.import_module(f"{module_name}.QtCore")
             signal = getattr(core, signal_name)
-            return signal, version()
+            return signal, version()  # pylint: disable=E1102
         except ImportError:
             continue
     raise RuntimeError("No Qt bindings found")
@@ -46,7 +50,7 @@ signal_slot_uri = {
 signal_name_dict = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
 slot_name = {"Qt5": "Slot", "PySide2": "Slot", "PyQt5": "pyqtSlot"}
 type_translate_dict = {
-    "class": ["class", "enum"],
+    "class": ["class", "enum", "attribute"],
     "meth": ["method", "signal"],
     "mod": ["module"],
 }
@@ -54,83 +58,116 @@ signal_pattern = re.compile(r"((\w+\d?\.QtCore\.)|(QtCore\.)|(\.))?(pyqt)?Signal
 slot_pattern = re.compile(r"((\w+\d?\.QtCore\.)|(QtCore\.)|(\.))?(pyqt)?Slot")
 
 
+def _fix_target(target: str, inventories: InventoryAdapter) -> str:
+    if (
+        target.startswith("PySide2")
+        and "PySide2" not in inventories.named_inventory
+        and "PyQt5" in inventories.named_inventory
+    ):
+        _head, dot, tail = target.partition(".")
+        return "PyQt5" + dot + tail
+    if (
+        target.startswith("PyQt5")
+        and "PyQt5" not in inventories.named_inventory
+        and "PySide2" in inventories.named_inventory
+    ):
+        _head, dot, tail = target.partition(".")
+        return "PySide2" + dot + tail
+    return target
+
+
+def _get_inventory_for_target(target: str, inventories: InventoryAdapter):
+    try:
+        return inventories.named_inventory[target.partition(".")[0]]
+    except KeyError:
+        pass
+    if "Qt" in inventories.named_inventory:
+        return inventories.named_inventory["Qt"]
+    if "PyQt5" in inventories.named_inventory:
+        return inventories.named_inventory["PyQt5"]
+    return inventories.named_inventory["PySide2"]
+
+
+def _extract_from_inventory(target: str, inventory, node: Element):
+    target_list = [target, "PyQt5." + target, "PySide2." + target]
+    if "sip:module" in inventory:
+        target_list += [name + "." + target for name in inventory["sip:module"].keys()]
+    if "py:module" in inventory:
+        target_list += [name + "." + target for name in inventory["py:module"].keys()]
+    type_names = type_translate_dict.get(node.get("reftype"), [node.get("reftype")])
+    for name in type_names:
+        for prefix in ["sip", "py"]:
+            obj_type_name = f"{prefix}:{name}"
+            if obj_type_name in inventory:
+                break
+        else:
+            continue
+        for target_name in target_list:
+            if target_name in inventory[obj_type_name]:
+                _proj, version, uri, dispname = inventory[obj_type_name][target_name]
+                uri = uri.replace("##", "#")
+                return uri, dispname, version, target_name, name
+    return None
+
+
+def _prepare_object(
+    target: str, inventories: InventoryAdapter, node: Element, app: Sphinx
+) -> Optional[Tuple[str, str, str]]:
+    inventory = _get_inventory_for_target(target, inventories)
+
+    res = _extract_from_inventory(target, inventory, node)
+    if res is None:
+        return None
+
+    version, uri, display_name, target_name, name = res
+    if app.config.qt_documentation == "Qt5":
+        html_name = uri.split("/")[-1]
+        uri = "https://doc.qt.io/qt-5/" + html_name
+        if name == "enum":
+            uri += "-enum"
+    elif app.config.qt_documentation == "PySide2":
+        if node.get("reftype") == "meth":
+            split_tup = target_name.split(".")[1:]
+            ref_name = ".".join(["PySide2", split_tup[0], "PySide2"] + split_tup)
+            html_name = "/".join(split_tup[:-1]) + ".html#" + ref_name
+        else:
+            html_name = "/".join(target_name.split(".")[1:]) + ".html"
+        uri = "https://doc.qt.io/qtforpython/PySide2/" + html_name
+    return uri, display_name, version
+
+
 # noinspection PyUnusedLocal
+# pylint: disable=W0613
 def missing_reference(
     app: Sphinx, env: BuildEnvironment, node: Element, contnode: TextElement
 ) -> Optional[nodes.reference]:
     """Linking to Qt documentation."""
     target: str = node["reftarget"]
     inventories = InventoryAdapter(env)
-    objtypes: Optional[List[str]] = None
     if node["reftype"] == "any":
         # we search anything!
-        objtypes = [
-            f"{domain.name}:{objtype}"
-            for domain in env.domains.values()
-            for objtype in domain.object_types
-        ]
         domain = None
     else:
         domain = node.get("refdomain")
         if not domain:
             # only objects in domains are in the inventory
             return None
-        objtypes = env.get_domain(domain).objtypes_for_role(node["reftype"])
-        if not objtypes:
+        if not env.get_domain(domain).objtypes_for_role(node["reftype"]):
             return None
-        objtypes = [f"{domain}:{objtype}" for objtype in objtypes]
-    if target.startswith("PySide2"):
-        head, dot, tail = target.partition(".")
-        target = "PyQt5" + dot + tail
+    target = _fix_target(target, inventories)
     if signal_pattern.match(target):
         uri = signal_slot_uri[app.config.qt_documentation]
-        dispname = signal_name_dict[app.config.qt_documentation]
+        display_name = signal_name_dict[app.config.qt_documentation]
         version = QT_VERSION
     elif slot_pattern.match(target):
         uri = signal_slot_uri[app.config.qt_documentation]
-        dispname = slot_name[app.config.qt_documentation]
+        display_name = slot_name[app.config.qt_documentation]
         version = QT_VERSION
     else:
-        target_list = [target, "PyQt5." + target]
-        target_list += [
-            name + "." + target
-            for name in inventories.named_inventory["PyQt5"]["sip:module"].keys()
-        ]
-        if node.get("reftype") in type_translate_dict:
-            type_names = type_translate_dict[node.get("reftype")]
-        else:
-            type_names = [node.get("reftype")]
-        for name in type_names:
-            obj_type_name = f"sip:{name}"
-            if obj_type_name not in inventories.named_inventory["PyQt5"]:
-                return None
-            for target_name in target_list:
-                if target_name in inventories.main_inventory[obj_type_name]:
-                    proj, version, uri, dispname = inventories.named_inventory["PyQt5"][
-                        obj_type_name
-                    ][target_name]
-                    uri = uri.replace("##", "#")
-                    #  print(node)  # print nodes with unresolved references
-                    break
-            else:
-                continue
-            break
-        else:
+        resp = _prepare_object(target, inventories, node, app)
+        if resp is None:
             return None
-        if app.config.qt_documentation == "Qt5":
-            html_name = uri.split("/")[-1]
-            uri = "https://doc.qt.io/qt-5/" + html_name
-            if name == "enum":
-                uri += "-enum"
-        elif app.config.qt_documentation == "PySide2":
-            if node.get("reftype") == "meth":
-                split_tup = target_name.split(".")[1:]
-                ref_name = ".".join(["PySide2", split_tup[0], "PySide2"] + split_tup)
-                html_name = "/".join(split_tup[:-1]) + ".html#" + ref_name
-            else:
-                html_name = "/".join(target_name.split(".")[1:]) + ".html"
-            uri = "https://doc.qt.io/qtforpython/PySide2/" + html_name
-
+        uri, display_name, version = resp
     # remove this line if you would like straight to pyqt documentation
     if version:
         reftitle = _("(in %s v%s)") % (app.config.qt_documentation, version)
@@ -142,11 +179,12 @@ def missing_reference(
         newnode.append(contnode)
     else:
         # else use the given display name (used for :ref:)
-        newnode.append(contnode.__class__(dispname, dispname))
+        newnode.append(contnode.__class__(display_name, display_name))
     return newnode
 
 
 # noinspection PyUnusedLocal
+# pylint: disable=W0613,R0913
 def autodoc_process_signature(
     app: Sphinx, what, name: str, obj, options, signature, return_annotation
 ):
@@ -161,3 +199,4 @@ def autodoc_process_signature(
 
         pos = len(name.rsplit(".", 1)[1])
         return ", ".join(sig[pos:] for sig in obj.signatures), None
+    return None

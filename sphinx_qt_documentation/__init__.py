@@ -9,7 +9,6 @@ this extension provides one configuration option:
  * Qt5 - linking to Qt5 documentation on "https://doc.qt.io/qt-5/" (default)
  * PySide2 - linking to PySide2 documentation on  "https://doc.qt.io/qtforpython/PySide2/"
 """
-import re
 from typing import Any, Dict
 
 from sphinx.application import Sphinx
@@ -21,29 +20,28 @@ from sphinx_qt_documentation._missing_reference import (
     missing_reference,
 )
 
-# TODO add response to
-#  https://stackoverflow.com/questions/47102004/how-to-properly-link-to-pyqt5-documentation-using-intersphinx
-
 
 def setup(app: Sphinx) -> Dict[str, Any]:
     app.setup_extension("sphinx.ext.autodoc")
     app.setup_extension("sphinx.ext.intersphinx")
-    if hasattr(app.config, "intersphinx_mapping"):
-        if "PyQt5" not in app.config.intersphinx_mapping:
-            app.config.intersphinx_mapping["PyQt5"] = (
-                "https://www.riverbankcomputing.com/static/Docs/PyQt5",
-                None,
-            )
-    else:
-        app.config.intersphinx_mapping = {
-            "PyQt5": ("https://www.riverbankcomputing.com/static/Docs/PyQt5", None)
-        }
-    app.connect("missing-reference", missing_reference)
-    app.connect("autodoc-process-signature", autodoc_process_signature)
-    # app.connect('doctree-read', doctree_read)
     app.add_config_value(
         "qt_documentation", "Qt5", True, ENUM("Qt5", "PySide2", "PyQt5")
     )
+    if getattr(app.config, "qt_documentation", "Qt5") == "PySide2":
+        url = "https://doc.qt.io/qtforpython-5/"
+        name = "PySide2"
+    else:
+        url = "https://www.riverbankcomputing.com/static/Docs/PyQt5"
+        name = "PyQt5"
+
+    if hasattr(app.config, "intersphinx_mapping"):
+        if "PyQt5" not in app.config.intersphinx_mapping:
+            app.config.intersphinx_mapping[name] = (url, None)
+    else:
+        app.config.intersphinx_mapping = {name: (url, None)}
+    app.connect("missing-reference", missing_reference)
+    app.connect("autodoc-process-signature", autodoc_process_signature)
+    # app.connect('doctree-read', doctree_read)
     return {"version": "0.1", "env_version": 1, "parallel_read_safe": True}
 
 
