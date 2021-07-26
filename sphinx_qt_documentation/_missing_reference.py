@@ -1,7 +1,7 @@
 import importlib
 import inspect
 import re
-from typing import Optional, List
+from typing import List, Optional
 
 from docutils import nodes
 from docutils.nodes import Element, TextElement
@@ -31,9 +31,10 @@ def _get_signal_and_version():
             core = importlib.import_module(f"{module_name}.QtCore")
             signal = getattr(core, signal_name)
             return signal, version()
-        except (ModuleNotFoundError, ImportError):
+        except ImportError:
             continue
     raise RuntimeError("No Qt bindings found")
+
 
 Signal, QT_VERSION = _get_signal_and_version()
 

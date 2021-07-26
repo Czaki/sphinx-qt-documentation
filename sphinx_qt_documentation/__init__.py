@@ -15,9 +15,11 @@ from typing import Any, Dict
 from sphinx.application import Sphinx
 from sphinx.config import ENUM
 
-from sphinx_qt_documentation._missing_reference import _get_signal_and_version, missing_reference, \
-    autodoc_process_signature
-
+from sphinx_qt_documentation._missing_reference import (
+    _get_signal_and_version,
+    autodoc_process_signature,
+    missing_reference,
+)
 
 # TODO add response to
 #  https://stackoverflow.com/questions/47102004/how-to-properly-link-to-pyqt5-documentation-using-intersphinx
