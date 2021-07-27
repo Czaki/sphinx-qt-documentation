@@ -77,10 +77,9 @@ def _fix_target(target: str, inventories: InventoryAdapter) -> str:
 
 
 def _get_inventory_for_target(target: str, inventories: InventoryAdapter):
-    try:
-        return inventories.named_inventory[target.partition(".")[0]]
-    except KeyError:
-        pass
+    prefix = target.partition(".")[0]
+    if prefix in {"PySide2", "PyQt5"} and prefix in inventories.named_inventory:
+        return inventories.named_inventory[prefix]
     if "Qt" in inventories.named_inventory:
         return inventories.named_inventory["Qt"]
     if "Qt5" in inventories.named_inventory:
