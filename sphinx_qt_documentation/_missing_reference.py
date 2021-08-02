@@ -108,9 +108,13 @@ def _extract_from_inventory(target: str, inventory, node: Element):
             continue
         for target_name in target_list:
             if target_name in inventory[obj_type_name]:
-                _proj, version, uri, _dispname = inventory[obj_type_name][target_name]
+                _proj, version, uri, display_name = inventory[obj_type_name][
+                    target_name
+                ]
+                if display_name in ["", "-"]:
+                    display_name = target
                 uri = uri.replace("##", "#")
-                return uri, target, version, target_name, name
+                return uri, display_name, version, target_name, name
     return None
 
 
@@ -183,14 +187,19 @@ def missing_reference(
         if not env.get_domain(domain).objtypes_for_role(node["reftype"]):
             return None
     new_target = _fix_target(target, inventories)
-    if signal_pattern.match(new_target) or slot_pattern.match(new_target):
+    if signal_pattern.match(new_target):
         uri = signal_slot_uri[app.config.qt_documentation]
         version = QT_VERSION
+        display_name = signal_name_dict[app.config.qt_documentation]
+    elif slot_pattern.match(new_target):
+        uri = signal_slot_uri[app.config.qt_documentation]
+        version = QT_VERSION
+        display_name = slot_name[app.config.qt_documentation]
     else:
         resp = _prepare_object(new_target, inventories, node, app)
         if resp is None:
             return None
-        uri, _display_name, version = resp
+        uri, display_name, version = resp
     # remove this line if you would like straight to pyqt documentation
     if version:
         reftitle = _("(in %s v%s)") % (app.config.qt_documentation, version)
@@ -202,7 +211,7 @@ def missing_reference(
         newnode.append(contnode)
     else:
         # else use the given display name (used for :ref:)
-        newnode.append(contnode.__class__(target, target))
+        newnode.append(contnode.__class__(display_name, display_name))
     return newnode
 
 
