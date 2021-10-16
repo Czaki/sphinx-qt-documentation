@@ -230,5 +230,5 @@ def autodoc_process_signature(
             return match[0], None
 
         pos = len(name.rsplit(".", 1)[1])
-        return ", ".join(sig[pos:] for sig in obj.signatures), None
+        return ", ".join(sig[pos:] for sig in getattr(obj, 'signatures', [])), None
     return None
