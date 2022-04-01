@@ -24,7 +24,7 @@ def test_simple(tmp_path):
     assert build_main([str(tmp_path), str(tmp_path / "html")]) == 0
     with open(tmp_path / "html" / "index.html") as f_p:
         text = f_p.read()
-    assert 'href="https://doc.qt.io/qt-5/qwidget.html' in text
+    assert 'href="https://doc.qt.io/qt-6/qwidget.html' in text
 
 
 @pytest.mark.parametrize(
@@ -32,9 +32,16 @@ def test_simple(tmp_path):
     [
         ("Qt5", "https://doc.qt.io/qt-5/qwidget.html"),
         ("PySide2", "https://doc.qt.io/qtforpython/PySide2/QtWidgets/QWidget.html"),
+        # FIXME
         (
             "PyQt5",
             "https://www.riverbankcomputing.com/static/Docs/PyQt5/api/qtwidgets/qwidget.html",
+        ),
+        ("Qt6", "https://doc.qt.io/qt-6/qwidget.html"),
+        ("PySide6", "https://doc.qt.io/qtforpython/PySide6/QtWidgets/QWidget.html"),
+        (
+            "PyQt6",
+            "https://www.riverbankcomputing.com/static/Docs/PyQt6/api/qtwidgets/qwidget.html",
         ),
     ],
 )
@@ -46,18 +53,26 @@ def test_target_documentation(tmp_path, target, url):
     assert build_main([str(tmp_path), str(tmp_path / "html")]) == 0
     with open(tmp_path / "html" / "index.html") as f_p:
         text = f_p.read()
+    # FIXME
+    if target == "PyQt5":
+        with open("/workspace/sphinx-qt-documentation/foo.html", "w") as f:
+            f.write(text)
     assert 'href="' + url in text
 
 
 @pytest.mark.parametrize(
     "target,url",
     [
+        ("Qt6", "https://doc.qt.io/qtforpython-6/"),
+        ("Qt6", "https://www.riverbankcomputing.com/static/Docs/PyQt6/"),
         ("Qt5", "https://doc.qt.io/qtforpython-5/"),
         ("Qt5", "https://www.riverbankcomputing.com/static/Docs/PyQt5/"),
-        ("Qt", "https://doc.qt.io/qtforpython-5/"),
-        ("Qt", "https://www.riverbankcomputing.com/static/Docs/PyQt5/"),
+        ("Qt", "https://doc.qt.io/qtforpython-6/"),
+        ("Qt", "https://www.riverbankcomputing.com/static/Docs/PyQt6/"),
         ("PySide2", "https://doc.qt.io/qtforpython-5/"),
         ("PyQt5", "https://www.riverbankcomputing.com/static/Docs/PyQt5/"),
+        ("PySide6", "https://doc.qt.io/qtforpython-6/"),
+        ("PyQt6", "https://www.riverbankcomputing.com/static/Docs/PyQt6/"),
     ],
 )
 def test_different_sources(tmp_path, target, url):
@@ -68,7 +83,7 @@ def test_different_sources(tmp_path, target, url):
     assert build_main([str(tmp_path), str(tmp_path / "html")]) == 0
     with open(tmp_path / "html" / "index.html") as f_p:
         text = f_p.read()
-    assert 'href="https://doc.qt.io/qt-5/qwidget.html"' in text
+    assert 'href="https://doc.qt.io/qt-6/qwidget.html"' in text
 
 
 CONF_TEMPLATE = """

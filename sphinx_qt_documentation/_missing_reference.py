@@ -29,6 +29,14 @@ def _get_signal_and_version():
             lambda: importlib.import_module("PyQt5.QtCore").QT_VERSION_STR,
             "pyqtSignal",
         ),
+        "PySide6": (
+            lambda: importlib.import_module("PySide6.QtCore").__version__,
+            "Signal",
+        ),
+        "PyQt6": (
+            lambda: importlib.import_module("PyQt6.QtCore").QT_VERSION_STR,
+            "pyqtSignal",
+        ),
     }
     for module_name, (version, signal_name) in name_mapping.items():
         try:
@@ -46,9 +54,26 @@ signal_slot_uri = {
     "Qt5": "https://doc.qt.io/qt-5/signalsandslots.html",
     "PySide2": "https://doc.qt.io/qtforpython/overviews/signalsandslots.html",
     "PyQt5": "https://www.riverbankcomputing.com/static/Docs/PyQt5/signals_slots.html",
+    "Qt6": "https://doc.qt.io/qt-6/signalsandslots.html",
+    "PySide6": "https://doc.qt.io/qtforpython/overviews/signalsandslots.html",
+    "PyQt6": "https://www.riverbankcomputing.com/static/Docs/PyQt6/signals_slots.html",
 }
-signal_name_dict = {"Qt5": "Signal", "PySide2": "Signal", "PyQt5": "pyqtSignal"}
-slot_name = {"Qt5": "Slot", "PySide2": "Slot", "PyQt5": "pyqtSlot"}
+signal_name_dict = {
+    "Qt5": "Signal",
+    "PySide2": "Signal",
+    "PyQt5": "pyqtSignal",
+    "Qt6": "Signal",
+    "PySide6": "Signal",
+    "PyQt6": "pyqtSignal",
+}
+slot_name = {
+    "Qt5": "Slot",
+    "PySide2": "Slot",
+    "PyQt5": "pyqtSlot",
+    "Qt6": "Slot",
+    "PySide6": "Slot",
+    "PyQt6": "pyqtSlot",
+}
 type_translate_dict = {
     "class": ["class", "enum", "attribute"],
     "meth": ["method", "signal"],
@@ -73,24 +98,53 @@ def _fix_target(target: str, inventories: InventoryAdapter) -> str:
     ):
         _head, dot, tail = target.partition(".")
         return "PySide2" + dot + tail
+    if (
+        target.startswith("PySide6")
+        and "PySide6" not in inventories.named_inventory
+        and "PyQt6" in inventories.named_inventory
+    ):
+        _head, dot, tail = target.partition(".")
+        return "PyQt6" + dot + tail
+    if (
+        target.startswith("PyQt6")
+        and "PyQt6" not in inventories.named_inventory
+        and "PySide6" in inventories.named_inventory
+    ):
+        _head, dot, tail = target.partition(".")
+        return "PySide6" + dot + tail
     return target
 
 
 def _get_inventory_for_target(target: str, inventories: InventoryAdapter):
     prefix = target.partition(".")[0]
-    if prefix in {"PySide2", "PyQt5"} and prefix in inventories.named_inventory:
+    if (
+        prefix in {"PySide2", "PyQt5", "PySide6", "PyQt6"}
+        and prefix in inventories.named_inventory
+    ):
         return inventories.named_inventory[prefix]
     if "Qt" in inventories.named_inventory:
         return inventories.named_inventory["Qt"]
+    if "Qt6" in inventories.named_inventory:
+        return inventories.named_inventory["Qt6"]
+    if "PyQt6" in inventories.named_inventory:
+        return inventories.named_inventory["PyQt6"]
     if "Qt5" in inventories.named_inventory:
         return inventories.named_inventory["Qt5"]
     if "PyQt5" in inventories.named_inventory:
         return inventories.named_inventory["PyQt5"]
-    return inventories.named_inventory["PySide2"]
+    if "PySide2" in inventories.named_inventory:
+        return inventories.named_inventory["PySide2"]
+    return inventories.named_inventory["PySide6"]
 
 
 def _extract_from_inventory(target: str, inventory, node: Element):
-    target_list = [target, "PyQt5." + target, "PySide2." + target]
+    target_list = [
+        target,
+        "PyQt5." + target,
+        "PySide2." + target,
+        "PyQt6." + target,
+        "PySide6." + target,
+    ]
     if "sip:module" in inventory:
         target_list += [name + "." + target for name in inventory["sip:module"].keys()]
     if "py:module" in inventory:
@@ -123,7 +177,7 @@ def _parse_pyside_uri(uri: str) -> Tuple[str, str]:
     Try to parse PySide URI and extract html file name and anchor
     """
     uri_re = re.compile(
-        r"https://doc.qt.io/qtforpython(-5)?/(?P<path>(PySide[26])(/\w+)+)\.html#(?P<anchor>(\w+\.)+(\w+))"
+        r"https://doc.qt.io/qtforpython(-[56])?/(?P<path>(PySide[26])(/\w+)+)\.html#(?P<anchor>(\w+\.)+(\w+))"
     )
     matched = uri_re.match(uri)
     if matched is None:
@@ -145,14 +199,34 @@ def _prepare_object(
         return None
 
     uri, display_name, version, target_name, name = res
-    if app.config.qt_documentation == "Qt5":
+    if app.config.qt_documentation == "Qt6":
+        if "riverbankcomputing" in uri:
+            html_name = uri.split("/")[-1]
+            uri = "https://doc.qt.io/qt-6/" + html_name
+            if name == "enum":
+                uri += "-enum"
+        else:
+            # PySide6 documentation
+            html_name, anchor = _parse_pyside_uri(uri)
+            uri = (
+                "https://doc.qt.io/qt-6/" + html_name + ("#" + anchor if anchor else "")
+            )
+    elif app.config.qt_documentation == "PySide6" and "PySide6" not in uri:
+        if node.get("reftype") == "meth":
+            split_tup = target_name.split(".")[1:]
+            ref_name = ".".join(["PySide6", split_tup[0], "PySide6"] + split_tup)
+            html_name = "/".join(split_tup[:-1]) + ".html#" + ref_name
+        else:
+            html_name = "/".join(target_name.split(".")[1:]) + ".html"
+        uri = "https://doc.qt.io/qtforpython/PySide6/" + html_name
+    elif app.config.qt_documentation == "Qt5":
         if "riverbankcomputing" in uri:
             html_name = uri.split("/")[-1]
             uri = "https://doc.qt.io/qt-5/" + html_name
             if name == "enum":
                 uri += "-enum"
         else:
-            # PySide2 documentation
+            # PySide6 documentation
             html_name, anchor = _parse_pyside_uri(uri)
             uri = (
                 "https://doc.qt.io/qt-5/" + html_name + ("#" + anchor if anchor else "")
@@ -160,11 +234,12 @@ def _prepare_object(
     elif app.config.qt_documentation == "PySide2" and "PySide2" not in uri:
         if node.get("reftype") == "meth":
             split_tup = target_name.split(".")[1:]
-            ref_name = ".".join(["PySide2", split_tup[0], "PySide2"] + split_tup)
+            ref_name = ".".join(["PySide6", split_tup[0], "PySide2"] + split_tup)
             html_name = "/".join(split_tup[:-1]) + ".html#" + ref_name
         else:
             html_name = "/".join(target_name.split(".")[1:]) + ".html"
         uri = "https://doc.qt.io/qtforpython/PySide2/" + html_name
+
     return uri, display_name, version
 
 
