@@ -13,6 +13,7 @@ from sphinx.application import Sphinx
 from sphinx.environment import BuildEnvironment
 from sphinx.ext.intersphinx import InventoryAdapter
 from sphinx.locale import get_translation
+from sphinx.config import Config
 
 _ = get_translation("sphinx")
 
@@ -307,3 +308,27 @@ def autodoc_process_signature(
         pos = len(name.rsplit(".", 1)[1])
         return ", ".join(sig[pos:] for sig in obj.signatures), None
     return None
+
+
+def patch_intersphinx_mapping(app: Sphinx, config: Config) -> None:
+    url_mapping = {
+        "PySide6": "https://doc.qt.io/qtforpython",
+        "PyQt6": "https://www.riverbankcomputing.com/static/Docs/PyQt6",
+        "PySide2": "https://doc.qt.io/qtforpython-5",
+        "PyQt5": "https://www.riverbankcomputing.com/static/Docs/PyQt5",
+    }
+
+    name = getattr(app.config, "qt_documentation", "Qt6")
+
+    if name == "Qt5":
+        name = "PyQt5"
+    elif name == "Qt6":
+        name = "PyQt6"
+
+    url = url_mapping[name]
+
+    intersphinx_mapping = getattr(app.config, "intersphinx_mapping")
+    if intersphinx_mapping is None:
+        intersphinx_mapping = {}
+    intersphinx_mapping[name] = (name, (url, (None,)))
+    app.config.intersphinx_mapping = intersphinx_mapping
