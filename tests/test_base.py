@@ -17,7 +17,6 @@ def create_index(dir_path: Path):
         f_p.write(INDEX_TEMPLATE)
 
 
-
 def test_simple(tmp_path):
     create_conf(tmp_path, ["sphinx_qt_documentation"])
     create_index(tmp_path)
@@ -26,7 +25,6 @@ def test_simple(tmp_path):
     with open(tmp_path / "html" / "index.html") as f_p:
         text = f_p.read()
     assert 'href="https://doc.qt.io/qt-6/qwidget.html' in text
-
 
 
 @pytest.mark.parametrize(
