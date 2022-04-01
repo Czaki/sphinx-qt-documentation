@@ -14,6 +14,7 @@ from sphinx.config import Config
 from sphinx.environment import BuildEnvironment
 from sphinx.ext.intersphinx import InventoryAdapter
 from sphinx.locale import get_translation
+from sphinx.util.typing import Inventory
 
 _ = get_translation("sphinx")
 
@@ -116,26 +117,20 @@ def _fix_target(target: str, inventories: InventoryAdapter) -> str:
     return target
 
 
-def _get_inventory_for_target(target: str, inventories: InventoryAdapter):
+def _get_inventory_for_target(target: str, inventories: InventoryAdapter) -> Inventory:
+    name = "PySide6"
     prefix = target.partition(".")[0]
     if (
         prefix in {"PySide2", "PyQt5", "PySide6", "PyQt6"}
         and prefix in inventories.named_inventory
     ):
-        return inventories.named_inventory[prefix]
-    if "Qt" in inventories.named_inventory:
-        return inventories.named_inventory["Qt"]
-    if "Qt6" in inventories.named_inventory:
-        return inventories.named_inventory["Qt6"]
-    if "PyQt6" in inventories.named_inventory:
-        return inventories.named_inventory["PyQt6"]
-    if "Qt5" in inventories.named_inventory:
-        return inventories.named_inventory["Qt5"]
-    if "PyQt5" in inventories.named_inventory:
-        return inventories.named_inventory["PyQt5"]
-    if "PySide2" in inventories.named_inventory:
-        return inventories.named_inventory["PySide2"]
-    return inventories.named_inventory["PySide6"]
+        name = prefix
+
+    for api in ("Qt", "Qt6", "PyQt6", "PyQt5", "PySide2"):
+        if api in inventories.named_inventory:
+            name = api
+            break
+    return inventories.named_inventory[name]
 
 
 def _extract_from_inventory(target: str, inventory, node: Element):
@@ -190,6 +185,7 @@ def _parse_pyside_uri(uri: str) -> Tuple[str, str]:
     return class_string.lower() + ".html", anchor
 
 
+# pylint: disable=R0912
 def _prepare_object(
     target: str, inventories: InventoryAdapter, node: Element, app: Sphinx
 ) -> Optional[Tuple[str, str, str]]:
