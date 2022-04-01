@@ -10,10 +10,10 @@ from typing import Optional, Tuple
 from docutils import nodes
 from docutils.nodes import Element, TextElement
 from sphinx.application import Sphinx
+from sphinx.config import Config
 from sphinx.environment import BuildEnvironment
 from sphinx.ext.intersphinx import InventoryAdapter
 from sphinx.locale import get_translation
-from sphinx.config import Config
 
 _ = get_translation("sphinx")
 
