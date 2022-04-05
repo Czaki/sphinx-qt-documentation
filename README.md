@@ -15,10 +15,10 @@ This extension provides one configuration option:
 `qt_documentation` with possible values:
 
 * PyQt5 - linking to PyQt documentation on https://www.riverbankcomputing.com/static/Docs/PyQt5/api/ (incomplete)
-* Qt5 - linking to Qt5 documentation on "https://doc.qt.io/qt-5/"
+* Qt5 - linking to Qt5 documentation on "https://doc.qt.io/qt-5/" (default)
 * PySide2 - linking to PySide6 documentation on  "https://doc.qt.io/qtforpython-5/"
 * PyQt6 - linking to PyQt documentation on https://www.riverbankcomputing.com/static/Docs/PyQt6/api/ (incomplete)
-* Qt6 - linking to Qt5 documentation on "https://doc.qt.io/qt-6/" (default)
+* Qt6 - linking to Qt5 documentation on "https://doc.qt.io/qt-6/"
 * PySide6 - linking to PySide6 documentation on  "https://doc.qt.io/qtforpython/PySide6/"
 
 For default this extension use `inv` file from PyQt5 to resolve objects.

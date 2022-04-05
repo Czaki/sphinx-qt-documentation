@@ -6,10 +6,10 @@ this extension provides one configuration option:
 `qt_documentation` with possible values:
 
  * PyQt5 - linking to PyQt documentation on https://www.riverbankcomputing.com/static/Docs/PyQt5/api/ (incomplete)
- * Qt5 - linking to Qt5 documentation on "https://doc.qt.io/qt-5/"
+ * Qt5 - linking to Qt5 documentation on "https://doc.qt.io/qt-5/" (default)
  * PySide2 - linking to PySide6 documentation on  "https://doc.qt.io/qtforpython-5/"
  * PyQt6 - linking to PyQt documentation on https://www.riverbankcomputing.com/static/Docs/PyQt6/api/ (incomplete)
- * Qt6 - linking to Qt5 documentation on "https://doc.qt.io/qt-6/" (default)
+ * Qt6 - linking to Qt5 documentation on "https://doc.qt.io/qt-6/"
  * PySide6 - linking to PySide6 documentation on  "https://doc.qt.io/qtforpython/PySide6/"
 """
 from typing import Any, Dict
@@ -29,7 +29,7 @@ def setup(app: Sphinx) -> Dict[str, Any]:
     app.setup_extension("sphinx.ext.intersphinx")
     app.add_config_value(
         "qt_documentation",
-        "Qt6",
+        "Qt5",
         True,
         ENUM("Qt5", "PySide2", "PyQt5", "Qt6", "PySide6", "PyQt6"),
     )
