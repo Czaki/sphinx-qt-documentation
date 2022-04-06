@@ -31,10 +31,16 @@ def test_simple(tmp_path):
     "target,url",
     [
         ("Qt5", "https://doc.qt.io/qt-5/qwidget.html"),
-        ("PySide2", "https://doc.qt.io/qtforpython/PySide2/QtWidgets/QWidget.html"),
+        ("PySide2", "https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QWidget.html"),
         (
             "PyQt5",
             "https://www.riverbankcomputing.com/static/Docs/PyQt5/api/qtwidgets/qwidget.html",
+        ),
+        ("Qt6", "https://doc.qt.io/qt-6/qwidget.html"),
+        ("PySide6", "https://doc.qt.io/qtforpython/PySide6/QtWidgets/QWidget.html"),
+        (
+            "PyQt6",
+            "https://www.riverbankcomputing.com/static/Docs/PyQt6/api/qtwidgets/qwidget.html",
         ),
     ],
 )
@@ -52,12 +58,16 @@ def test_target_documentation(tmp_path, target, url):
 @pytest.mark.parametrize(
     "target,url",
     [
+        ("Qt6", "https://doc.qt.io/qtforpython-6/"),
+        ("Qt6", "https://www.riverbankcomputing.com/static/Docs/PyQt6/"),
         ("Qt5", "https://doc.qt.io/qtforpython-5/"),
         ("Qt5", "https://www.riverbankcomputing.com/static/Docs/PyQt5/"),
         ("Qt", "https://doc.qt.io/qtforpython-5/"),
         ("Qt", "https://www.riverbankcomputing.com/static/Docs/PyQt5/"),
         ("PySide2", "https://doc.qt.io/qtforpython-5/"),
         ("PyQt5", "https://www.riverbankcomputing.com/static/Docs/PyQt5/"),
+        ("PySide6", "https://doc.qt.io/qtforpython-6/"),
+        ("PyQt6", "https://www.riverbankcomputing.com/static/Docs/PyQt6/"),
     ],
 )
 def test_different_sources(tmp_path, target, url):
