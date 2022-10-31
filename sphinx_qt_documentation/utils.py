@@ -52,7 +52,8 @@ def _get_signal_and_version():
 
 Signal, QT_VERSION = _get_signal_and_version()
 SIGNAL_PREFIXES_REGEX = "".join(
-    rf"(?:{name}\.)?" for name in Signal.__module__.split(".")
+    rf"(?:{Signal.__module__.split('.', i)[-1]}\.)?"
+    for i in range(len(Signal.__module__.split(".")))
 )
 signal_slot_uri = {
     "Qt5": "https://doc.qt.io/qt-5/signalsandslots.html",
