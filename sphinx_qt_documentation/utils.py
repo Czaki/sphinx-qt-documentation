@@ -51,7 +51,10 @@ def _get_signal_and_version():
 
 
 Signal, QT_VERSION = _get_signal_and_version()
-
+SIGNAL_PREFIXES_REGEX = "".join(
+    rf"(?:{Signal.__module__.split('.', i)[-1]}\.)?"
+    for i in range(len(Signal.__module__.split(".")))
+)
 signal_slot_uri = {
     "Qt5": "https://doc.qt.io/qt-5/signalsandslots.html",
     "PySide2": "https://doc.qt.io/qtforpython/overviews/signalsandslots.html",
@@ -296,7 +299,9 @@ def autodoc_process_signature(
         module_name, class_name, signal_name_local = name.rsplit(".", 2)
         module = importlib.import_module(module_name)
         class_ob = getattr(module, class_name)
-        reg = re.compile(r" +" + signal_name_local + r" *= *Signal(\([^)]*\))")
+        reg = re.compile(
+            rf" +{signal_name_local} *= *{SIGNAL_PREFIXES_REGEX}Signal(\([^)]*\))"
+        )
         match = reg.findall(inspect.getsource(class_ob))
         if match:
             return match[0], None
