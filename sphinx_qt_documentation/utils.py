@@ -9,6 +9,7 @@ from typing import Optional, Tuple
 
 from docutils import nodes
 from docutils.nodes import Element, TextElement
+from sphinx import version_info as sphinx_version
 from sphinx.application import Sphinx
 from sphinx.config import Config
 from sphinx.environment import BuildEnvironment
@@ -161,9 +162,14 @@ def _extract_from_inventory(target: str, inventory, node: Element):
             continue
         for target_name in target_list:
             if target_name in inventory[obj_type_name]:
-                _proj, version, uri, display_name = inventory[obj_type_name][
-                    target_name
-                ]
+                item = inventory[obj_type_name][target_name]
+                if sphinx_version >= (8, 2):
+                    version, uri, display_name = (
+                        item.project_version, item.uri, item.display_name
+                    )
+                else:
+                    _, version, uri, display_name = item
+
                 if display_name in ["", "-"]:
                     display_name = target
                 uri = uri.replace("##", "#")
