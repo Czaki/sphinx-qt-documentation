@@ -12,6 +12,7 @@ this extension provides one configuration option:
  * Qt6 - linking to Qt5 documentation on "https://doc.qt.io/qt-6/"
  * PySide6 - linking to PySide6 documentation on  "https://doc.qt.io/qtforpython/PySide6/"
 """
+
 from typing import Any, Dict
 
 from sphinx.application import Sphinx
